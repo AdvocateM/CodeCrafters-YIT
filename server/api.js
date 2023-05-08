@@ -120,7 +120,18 @@ router.post('/login', (req, res) => {
 	res.json({ token });
 });
 
-//Tutor-Profile API Section
+// Tutor-Profile API Section
+
+router.get("/tutor_profile", async (req, res) => {
+	try {
+		const result = await pool.query("SELECT * FROM tutor_profile");
+		res.json(result.rows);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ error: "It's Server error" });
+	}
+});
+
 
 // Get tutor profile by ID
 router.get("/:tutorId", async (req, res) => {
@@ -138,6 +149,7 @@ router.get("/:tutorId", async (req, res) => {
 		res.status(500).json({ message: "It's Server error" });
 	}
 });
+
 
 // Update tutor profile
 router.put("/:tutorId", async (req, res) => {

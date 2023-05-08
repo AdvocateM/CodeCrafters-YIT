@@ -5,11 +5,10 @@
 
 // const TutorProfile = ({ tutorId }) => {
 // 	const [tutorData, setTutorData] = useState(null);
-
 // 	useEffect(() => {
 // 		const fetchData = async () => {
 // 			try {
-// 				const response = await axios.get(`/api/tutors/${tutorId}`);
+// 				const response = await axios.get(`/localhost:3000/tutors/${tutorId}`);
 // 				setTutorData(response.data);
 // 			} catch (error) {
 // 				console.error(error);
@@ -25,7 +24,6 @@
 // 	const {
 // 		firstName,
 // 		lastName,
-// 		tutorId,
 // 		email,
 // 		phone,
 // 		dateOfBirth,
@@ -94,6 +92,9 @@
 // 				<label>Admin Comments:</label>
 // 				<span>{adminComments}</span>
 // 			</div>
+// 			<div>
+// 				<a href={`/tutor/edit/${tutorId}`}>Edit Profile</a>
+// 			</div>
 // 		</div>
 // 	);
 // };
@@ -104,17 +105,24 @@
 
 // export default TutorProfile;
 
+
+
+
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 import moment from "moment";
 import axios from "axios";
 
-const TutorProfile = ({ tutorId }) => {
+
+const TutorProfile = () => {
+	const { tutorId } = useParams();
 	const [tutorData, setTutorData] = useState(null);
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get(`/api/tutors/${tutorId}`);
+				const response = await axios.get(`/tutors/${tutorId}`);
 				setTutorData(response.data);
 			} catch (error) {
 				console.error(error);
@@ -210,3 +218,4 @@ TutorProfile.propTypes = {
 };
 
 export default TutorProfile;
+

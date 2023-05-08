@@ -43,10 +43,9 @@ if (config.production) {
 	app.use(httpsOnly());
 }
 
+// app.use("/health", (_, res) => res.sendStatus(200));   // I did comment this out because  is looking the static directory to hit the /health endpoint
 app.use(apiRoot, apiRouter);
-app.use("/health", (_, res) => res.sendStatus(200));
 app.use(clientRouter(apiRoot));
-
 app.use(logErrors());
 
 export default app;
