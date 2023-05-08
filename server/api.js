@@ -133,9 +133,9 @@ router.get("/:tutorId", async (req, res) => {
 		res.json(tutor);
 	} catch (error) {
 		if (error.response && error.response.status === 404) {
-			return res.status(404).json({ message: "Tutor not found" });
+			return res.status(404).json({ message: "Tutor is not There" });
 		}
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: "It's Server error" });
 	}
 });
 
@@ -151,9 +151,9 @@ router.put("/:tutorId", async (req, res) => {
 		res.json(updatedTutor);
 	} catch (error) {
 		if (error.response && error.response.status === 404) {
-			return res.status(404).json({ message: "Tutor not found" });
+			return res.status(404).json({ message: "Tutor is not There" });
 		}
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: "It's  Server error" });
 	}
 });
 
@@ -164,7 +164,7 @@ router.get("/:learnerId", async (req, res) => {
 	const { learnerId } = req.params;
 	try {
 		const response = await axios.get(
-			`https://api.example.com/learners/${learnerId}`
+			`/api/learners/${learnerId}`
 		);
 		const learner = response.data;
 		res.json(learner);
