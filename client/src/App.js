@@ -9,7 +9,7 @@ import ResetPassword from "./Auth/ResetPassword";
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AdminPage from "./AdminPage";
+import AdminPageForm from "./AdminPageForm";
  
 const App = () => (
 	<div>
@@ -21,7 +21,7 @@ const App = () => (
 			<Route path="/forgot-password" element={<ForgotPassword />} />
 			<Route path="/login" element={<Login />} />
 			<Route path="/reset_password/:id/:token" element={<ResetPassword />} />
-			<Route path="/AdminPage" element={<AdminPage />} />
+			<Route path="/AdminPageForm" element={<AdminPageForm />} />
 
 		</Routes>
 		<ToastContainer />	
