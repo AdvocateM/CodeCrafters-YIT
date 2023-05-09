@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 import axios from "axios";
-import Modal from "react-modal";
+
 
 const LearnerProfile = ({ learnerId }) => {
 	const [learnerData, setLearnerData] = useState(null);
-	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [editedData, setEditedData] = useState({
 		firstName: "",
 		lastName: "",
