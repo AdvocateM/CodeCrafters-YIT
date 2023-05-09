@@ -120,18 +120,7 @@ router.post('/login', (req, res) => {
 	res.json({ token });
 });
 
-// Tutor-Profile API Section
-
-router.get("/tutor_profile", async (req, res) => {
-	try {
-		const result = await pool.query("SELECT * FROM tutor_profile");
-		res.json(result.rows);
-	} catch (error) {
-		console.error(error);
-		res.status(500).json({ error: "It's Server error" });
-	}
-});
-
+//Tutor-Profile API Section
 
 // Get tutor profile by ID
 router.get("/:tutorId", async (req, res) => {
@@ -150,7 +139,6 @@ router.get("/:tutorId", async (req, res) => {
 	}
 });
 
-
 // Update tutor profile
 router.put("/:tutorId", async (req, res) => {
 	const { tutorId } = req.params;
@@ -163,9 +151,9 @@ router.put("/:tutorId", async (req, res) => {
 		res.json(updatedTutor);
 	} catch (error) {
 		if (error.response && error.response.status === 404) {
-			return res.status(404).json({ message: "Tutor is not There" });
+			return res.status(404).json({ message: "Tutor Is not There" });
 		}
-		res.status(500).json({ message: "It's  Server error" });
+		res.status(500).json({ message: "It's Server error" });
 	}
 });
 
@@ -190,21 +178,22 @@ router.get("/:learnerId", async (req, res) => {
 
 // Update learner profile
 router.put("/:learnerId", async (req, res) => {
-	const { tutorId } = req.params;
+	const { learnerId } = req.params;
 
 	try {
 		const response = await axios.put(`/api/learners/${learnerId}`,
 			req.body
 		);
-		const updatedTutor = response.data;
+		const updatedLearner = response.data;
 		res.json(updatedLearner);
 	} catch (error) {
 		if (error.response && error.response.status === 404) {
-			return res.status(404).json({ message: "Learner is not There" });
+			return res.status(404).json({ message: "Learner not found" });
 		}
-		res.status(500).json({ message: "It's Server error" });
+		res.status(500).json({ message: "Internal server error" });
 	}
 });
+
 
 
 
