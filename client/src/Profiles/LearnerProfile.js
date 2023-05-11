@@ -28,6 +28,7 @@ const LearnerProfile = ({ learnerId }) => {
 				console.error(error);
 			}
 		};
+		
 		fetchData();
 	}, [learnerId]);
 
