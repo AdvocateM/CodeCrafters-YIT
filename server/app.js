@@ -3,6 +3,9 @@ const cors = require("cors");
 const nodemailer = require('nodemailer');
 import apiRouter from "./api";
 import config from "./utils/config";
+import learners from "./Routes/learners";
+import tutors from "./Routes/tutors";
+
 import {
 	clientRouter,
 	configuredHelmet,
@@ -42,6 +45,10 @@ if (config.production) {
 	app.enable("trust proxy");
 	app.use(httpsOnly());
 }
+
+app.use("/learners", learners);
+app.use("/tutors", tutors);
+
 
 // app.use("/health", (_, res) => res.sendStatus(200));   // I did comment this out because  is looking the static directory to hit the /health endpoint
 app.use(apiRoot, apiRouter);

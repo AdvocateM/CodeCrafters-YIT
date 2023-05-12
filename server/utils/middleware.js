@@ -18,6 +18,8 @@ export const clientRouter = (apiRoot) => {
 	return router;
 };
 
+
+
 export const configuredHelmet = () => helmet({ contentSecurityPolicy: false });
 
 export const configuredMorgan = () =>
@@ -39,3 +41,5 @@ export const logErrors = () => (err, _, res, next) => {
 	logger.error("%O", err);
 	res.sendStatus(500);
 };
+
+

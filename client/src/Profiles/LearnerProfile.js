@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
-import axios from "axios";
-
 
 const LearnerProfile = ({ learnerId }) => {
 	const [learnerData, setLearnerData] = useState(null);
@@ -17,18 +15,20 @@ const LearnerProfile = ({ learnerId }) => {
 		adminComments: "",
 		tutorComments: "",
 	});
+	const [editMode, setEditMode] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get(`/api/learners/${learnerId}`);
-				setLearnerData(response.data);
-				setEditedData(response.data);
+				const response = await fetch(`localhost:3000/api/learners/${learnerId}`);
+				const data = await response.json();
+				setLearnerData(data);
+				setEditedData(data);
 			} catch (error) {
 				console.error(error);
 			}
 		};
-		
+
 		fetchData();
 	}, [learnerId]);
 
@@ -42,12 +42,22 @@ const LearnerProfile = ({ learnerId }) => {
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 		try {
-			await axios.put(`/api/learners/${learnerId}`, editedData);
+			await fetch(`/api/learners/${learnerId}`, {
+				method: "PUT",
+				body: JSON.stringify(editedData),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
 			setLearnerData(editedData);
-			setEditModalOpen(false);
+			setEditMode(false);
 		} catch (error) {
 			console.error(error);
 		}
+	};
+
+	const handleEdit = () => {
+		setEditMode(!editMode);
 	};
 
 	if (!learnerData) {
@@ -69,7 +79,6 @@ const LearnerProfile = ({ learnerId }) => {
 		tutorComments,
 		attendanceRecord,
 	} = learnerData;
-
 	return (
 		<div>
 			<h1>Profile Page</h1>
@@ -151,9 +160,3 @@ LearnerProfile.propTypes = {
 };
 
 export default LearnerProfile;
-
-
-
-
-
-
