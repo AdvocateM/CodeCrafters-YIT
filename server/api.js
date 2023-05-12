@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 const express = require("express");
 const axios = require("axios");
+import db from './db'; 
 
 const router = Router();
 
@@ -16,44 +17,78 @@ const transporter = nodemailer.createTransport({
 	},
 });
 
+
+
 const Users = [
 	{
 		id: 1,
 		name: 'Advocate Maroga',
 		email: 'tboymaroga7@gmail.com',
-		password: 'Zxcvbnm2023'
+		password: 'Zxcvbnm2023',
+		role: "Tutor"
 	},
 	{
 		id: 2,
 		name: 'John Due',
 		email: 'johndue@gmail.com',
-		password: 'Qwerty2023'
+		password: 'Qwerty2023',
+		role: "Learner"
+	},
+	{
+		id: 3,
+		name: 'Tshegofatso Maroga',
+		email: 'tboymaroga@gmail.com',
+		password: 'Zxcvbnm2023',
+		role: "Tutor"
+	},
+	{
+		id: 4,
+		name: 'Johns Due',
+		email: 'johndue@gmail.com',
+		password: 'Qwerty2023',
+		role: "Learner"
 	}
 ];
+
+// const profiles = [
+// 	{
+// 		id: 1,
+// 		name: 'Advocate Maroga',
+// 		email: 'tboymaroga7@gmail.com',
+// 		password: 'Zxcvbnm2023'
+// 	},
+// 	{
+// 		id: 2,
+// 		name: 'John Due',
+// 		email: 'johndue@gmail.com',
+// 		password: 'Qwerty2023'
+// 	}
+// ];
 
 router.get("/", (_, res) => {
 	logger.debug("Welcoming everyone...");
 	res.json({ message: "Hello, world!" });
 });
 
-
-router.post("/forgot_password", async (req, res) => {
+router.post('/forgot_password', async (req, res) => {
 	const email = req.body.email;
-	const transporter = req.transporter; // access transporter object
 
 	try {
-		const user = Users.find((u) => u.email === email);
-		if (!user) {
-			return res.status(400).json({ error: "User not found" });
+		const query = 'SELECT * FROM public.learner_profile WHERE email = $1';
+		const result = await db.query(query, [email]);
+
+		if (result.rowCount === 0) {
+			return res.status(400).json({ error: 'User not found' });
 		}
 
+		const user = result.rows[0];
 		const payload = { email: user.email, id: user.id };
-		const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "10m" });
+		const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '10m' });
 
 		const mailOptions = {
-			from: "mrtamaroga@gmail.com",
+			from: 'mrtamaroga@gmail.com',
 			to: email,
-			subject: "Reset your password",
+			subject: 'Reset your password',
 			html: `
         <p>Hi ${user.name},</p>
         <p>Please click the following link to reset your password:</p>
@@ -64,40 +99,46 @@ router.post("/forgot_password", async (req, res) => {
 		transporter.sendMail(mailOptions, (error, info) => {
 			if (error) {
 				console.error(error);
-				return res
-					.status(500)
-					.json({ error: `Failed to send email ${email}` });
+				return res.status(500).json({ error: `Failed to send email ${email}` });
 			}
-			console.log("Email sent: " + info.response);
-			res.json({ message: "Password reset link sent to your email" });
+			console.log('Email sent: ' + info.response);
+			res.json({ message: 'Password reset link sent to your email' });
 		});
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ error: "Internal server error" });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 });
 
-router.post("/reset_password/:id/:token", async (req, res) => {
+router.post('/reset_password/:id/:token', async (req, res) => {
 	const { id, token } = req.params;
 	const { password } = req.body;
 
 	try {
 		const payload = jwt.verify(token, JWT_SECRET);
 		if (payload.id !== parseInt(id)) {
-			return res.status(400).json({ error: "Invalid token" });
+			return res.status(400).json({ error: 'Invalid token' });
 		}
 
-		const user = Users.find((user) => user.id === parseInt(id));
-		if (!user) {
-			return res.status(400).json({ error: "User not found" });
-		}
-		user.password = password;
-		// await user.save();
+		const query = 'SELECT * FROM public.users WHERE id = $1';
+		const result = await db.query(query, [id]);
 
-		res.json({ message: "Password reset successful" });
+		if (result.rowCount === 0) {
+			return res.status(400).json({ error: 'User not found' });
+		}
+
+		const user = result.rows[0];
+		const hashedPassword = await bcrypt.hash(password, 10);
+		user.password = hashedPassword;
+
+		// Update the password in the database
+		const updateQuery = 'UPDATE public.users SET password = $1 WHERE id = $2';
+		await db.query(updateQuery, [hashedPassword, id]);
+
+		res.json({ message: 'Password reset successful' });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ error: "Internal server error" });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 });
 
@@ -119,6 +160,152 @@ router.post('/login', (req, res) => {
 	const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30m' });
 	res.json({ token });
 });
+
+
+// Admin
+// Retrieve learner profiles from the database
+router.get('/api/learner_profiles', async (req, res) => {
+	try {
+		const query = 'SELECT * FROM public.learner_profile ORDER BY created_at ASC';
+		const { rows: profiles } = await pool.query(query);
+		res.json(profiles);
+	} catch (error) {
+		console.error('Error retrieving learner profiles:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// Retrieve tutor profiles from the database
+router.get('/api/tutor_profiles', async (req, res) => {
+	try {
+		const query = 'SELECT * FROM public.tutor_profile ORDER BY created_at ASC';
+		const { rows: profiles } = await pool.query(query);
+		res.json(profiles);
+	} catch (error) {
+		console.error('Error retrieving tutor profiles:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// Update learner profile in the database
+router.put('/api/learner_profiles/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { name, surname, email, role } = req.body;
+		const query = 'UPDATE public.learner_profile SET name = $1, surname = $2, email = $3, role = $4 WHERE id = $5';
+		const values = [name, surname, email, role, id];
+		await pool.query(query, values);
+		res.json({ message: 'Learner profile updated successfully' });
+	} catch (error) {
+		console.error('Error updating learner profile:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// Update tutor profile in the database
+router.put('/api/tutor_profiles/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { name, surname, email, role } = req.body;
+		const query = 'UPDATE public.tutor_profile SET name = $1, surname = $2, email = $3, role = $4 WHERE id = $5';
+		const values = [name, surname, email, role, id];
+		await pool.query(query, values);
+		res.json({ message: 'Tutor profile updated successfully' });
+	} catch (error) {
+		console.error('Error updating tutor profile:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// Delete learner profile from the database
+router.delete('/api/learner_profiles/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const query = 'DELETE FROM public.learner_profile WHERE id = $1';
+		const values = [id];
+		await pool.query(query, values);
+		res.json({ message: 'Learner profile deleted successfully' });
+	} catch (error) {
+		console.error('Error deleting learner profile:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// Delete tutor profile from the database
+router.delete('/api/tutor_profiles/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const query = 'DELETE FROM public.tutor_profile WHERE id = $1';
+		const values = [id];
+		await pool.query(query, values);
+		res.json({ message: 'Tutor profile deleted successfully' });
+	} catch (error) {
+		console.error('Error deleting learner profile:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+	});
+
+
+// // Define API endpoints
+// router.get('/api/profiles', (req, res) => {
+// 	try {
+// 		const sortedProfiles = profiles
+// 		res.json(sortedProfiles);
+// 	} catch (error) {
+// 		console.error('Error retrieving profiles:', error);
+// 		res.status(500).json({ error: 'Internal server error' });
+// 	}
+// });
+
+
+// router.put('/api/profiles/:id', (req, res) => {
+// 	try {
+// 		const { id } = req.params;
+// 		const { name, surname, email, role } = req.body;
+
+// 		// Find the profile by ID
+// 		const profile = Users.find((p) => p.id === parseInt(id));
+
+// 		if (!profile) {
+// 			res.status(404).json({ error: 'Profile not found' });
+// 			return;
+// 		}
+
+// 		// Update the profile
+// 		profile.name = name;
+// 		profile.surname = surname;
+// 		profile.email = email;
+// 		profile.role = role;
+
+// 		res.json({ message: 'Profile updated successfully' });
+// 	} catch (error) {
+// 		console.error('Error updating profile:', error);
+// 		res.status(500).json({ error: 'Internal server error' });
+// 	}
+// });
+
+
+// router.delete('/api/profiles/:id', (req, res) => {
+// 	try {
+// 		const { id } = req.params;
+
+// 		// Find the index of the profile by ID
+// 		const profileIndex = Users.findIndex((p) => p.id === parseInt(id));
+
+// 		if (profileIndex === -1) {
+// 			res.status(404).json({ error: 'Profile not found' });
+// 			return;
+// 		}
+
+// 		// Remove the profile from the array
+// 		Users.splice(profileIndex, 1);
+
+// 		res.json({ message: 'Profile deleted successfully' });
+// 	} catch (error) {
+// 		console.error('Error deleting profile:', error);
+// 		res.status(500).json({ error: 'Internal server error' });
+// 	}
+// });
 
 //Tutor-Profile API Section
 
@@ -193,6 +380,9 @@ router.put("/:learnerId", async (req, res) => {
 		res.status(500).json({ message: "It's Server error" });
 	}
 });
+
+
+
 
 
 
